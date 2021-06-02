@@ -1,0 +1,266 @@
+\documentclass[twocolumn]{article}
+
+\usepackage[top=0.5in, bottom=0.5in, left=0.5in, right=0.5in]{geometry}
+
+\pagenumbering{gobble}
+\setlength{\parskip}{\baselineskip}
+\setlength{\parindent}{0pt}
+\PassOptionsToPackage{hyphens}{url}\usepackage[hidelinks]{hyperref}
+
+\title{BurpSuite 101}
+\author{Santiago}
+\date{}
+
+\begin{document}
+\maketitle
+
+\textbf{Disclaimer:} This document is only for education purposes. Before assessing a web application, always ask for consent.
+
+\section{Setup}
+
+Practical examples in this documents can be done using the following setup:
+
+\begin{itemize}
+    \item Ubuntu 20.04
+    \item Burp Suite Community Edition\cite{burpsuite}    
+    \item Docker\cite{docker}
+    \item DVWA\cite{dvwa}
+\end{itemize}
+
+\section{Introduction}
+BurpSuite is an application designed for web application security assessments.
+
+BurpSuite is a framework because it includes multiple tools and because it allows users to create extensions.
+Among the tools that BurpSuite includes we can find:
+
+\begin{itemize}
+    \item Proxy
+    \item Repeater
+    \item Decoder
+    \item Comparer
+    \item Sequencer
+    \item Intruder
+    \item Extender
+\end{itemize}
+
+\subsection{BurpSuite Professional vs. Community Edition}
+
+BurpSuite Pro is a paid version of BurpSuite and includes multiple features:
+
+\begin{itemize}
+    \item Saving projects
+    \item Full Intruder
+    \item Web scanner
+    \item Search function
+    \item Pro-exclusive extensions
+    \item \dots
+\end{itemize}
+
+However, BurpSuite Community Edition is enough to perform web security assessments. Also, some of the missing tools from the Pro version can be replaced with extensions and additional resources.
+
+\section{A little bit of Hypertext Transfer Protocol (HTTP)}
+
+HTTP\cite{rfc2616} is a text-based protocol that generally runs on port TCP 80. Additionally HTTP is client-server based, meaning that clients send request to servers and servers send responses back to the client. Requests and responses are known as messages.
+
+Requests are composed by:
+
+\begin{itemize}
+    \item Request-Line: Method and resource. The most common methods are:  
+    \begin{itemize}
+        \item \texttt{GET}: obtains the resource from the server
+        \item \texttt{HEAD}: a GET method where the server does not return a body
+        \item \texttt{PUT}: uploads or update the resource at the server
+        \item \texttt{POST}: sends information to the server
+        \item \texttt{DELETE}: removes information from
+    \end{itemize}
+    \item Message headers: different attributes that the message has. It includes:
+    \item Message body: data sent to the 
+\end{itemize}
+
+Responses are composed by:
+
+\begin{itemize}
+    \item Status Code and Reason Phrase:
+    \begin{itemize}
+        \item \texttt{200 OK}
+        \item \texttt{401 Unauthorized}
+        \item \texttt{404 Not Found}
+        \item \texttt{500 Server Error}
+    \end{itemize}
+    \item Header Fields
+    \item Body
+\end{itemize}
+
+For example, when a web browser (the client) wants to visualize a web page, it sends to a web sever a \texttt{GET} request whose header contains the location of the web page. The server, will send back a \texttt{200 OK} response to the client with body containing the web page that the browser then will render.
+
+\section{Using BurpSuite}
+
+\subsection{Proxy}
+
+An HTTP proxy is an application that sits between the client and the server and might be able to see and modify HTTP messages. 
+
+In the case of BurpSuite Proxy is a tool that by default allows us to inspect and modify the content of HTTP requests before they are sent to the server. 
+
+Further, the proxy allows us to see the history of all the requests and its responses. Requests within the history view can be highlighted to facilitate their identification.
+
+Finally, we can mention that modern browsers allow us to see the history of requests and responses; however, BurpSuite presents this information in a way that is more accessible for analysis.
+
+\subsubsection{Proxy Use Example}
+
+After starting DVWA\cite{dvwa} and starting BurpSuite with default settings, click on the tab called \texttt{Proxy}, then click on the button that says \texttt{Intercept is on} to turn interception, and then click on the button that says \texttt{Open Browser}.
+
+An instance of chromium will open, type 127.0.0.1, fill the login form with \texttt{admin} as the username and \texttt{password} as the password. Finally, click on the \texttt{Login} button.
+
+Go back to BurpSuite and under the \texttt{Proxy} tab, click on the \texttt{HTTP history} tab. Then, click on the different HTTP request, you will see the full requests and the responses from DVWA.
+
+\textbf{TIP:} You can click on the request number to highlight the request with different colors.
+
+\subsection{Repeater}
+
+Repeater is a tool that allows us to:
+
+\begin{itemize}
+    \item Re-send messages
+    \item Modify and send messages
+    \item Craft new messages and send them
+\end{itemize}
+
+Additionally, different requests can be named and organized in Repeater. Further modifications to request are being tracked by Repeater.
+
+Just like with the Proxy, modern browsers present a similar functionality. But BurpSuite's Repeater enables the analyst to perform these activities in an easier way.
+
+\subsubsection{Repeater Use Example}
+
+While in DVWA, go to the tab \texttt{Command Injection}, then fill the field \texttt{Enter and IP address} with \texttt{127.0.0.1} and click the \texttt{Submit} button. You will see the output of a \texttt{ping} command.
+
+Go back to the \texttt{Proxy} tab and select \texttt{HTTP History}. You will see a \texttt{POST} request for the {Command Injection} (\texttt{vulnerabilities/exec}), right-click on it and select \texttt{Send to Repeater}. The \texttt{Repeater} tab will change color.
+
+Now go to the \texttt{Repeater} Tab, you will notice an item with a \texttt{Request} section filled and an empty \texttt{Response} section. If you click on the button \texttt{Send}, Burp will send that \texttt{POST} request to DVWA and we will get a response.
+
+If you inspect the response, you will notice the output of the \texttt{ping} command as part of the body.
+
+Now, go back to the \texttt{Request} section and, in the body of the request, change the field \texttt{ip} for \texttt{127.0.0.1; whoami}. After sending the new request, you will notice that the body of response includes the result of a \texttt{ping} command and the result of the command \texttt{whoami}.
+
+\subsection{Decoder}
+
+Decorder is a very simple tool that allows us to encode and decode data into different formats, including:
+
+\begin{itemize}
+    \item Base64
+    \item URL 
+    \item Hex
+    \item Binary
+    \item \dots
+\end{itemize}
+
+Additionally, Decoder can produce hashes, for example:
+
+\begin{itemize}
+    \item MD 2, MD4, and MD5
+    \item SHA1, SHA2, and SHA3
+    \item \dots
+\end{itemize}
+
+\subsection{Comparer}
+
+Comparer is a tool that allows to compare two different requests or two different responses. Comparer highlights what has been modified, deleted, or added.
+
+\subsubsection{Comparer Use Example}
+
+While in the \texttt{Repeater} tab, you can right-click on the \texttt{Response} section of the last message, then select \texttt{Send to Comparer}. The \texttt{Comparer} tab will change color. Then, you can click on the back arrow next to the \texttt{Cancel} button at the top left, and send the older response to Comparer.
+
+Now, go to the \texttt{Comparer} tab. By default, Comparer selects two different items to compare. Click on the button that says \texttt{Word} at the bottom right.
+
+If you click on the checkbox that says \texttt{Sync views}, you can scroll down and find that som data has been modified and deleted.
+
+\subsection{Sequencer}
+
+Sequencer is a tool that analyzes the entropy of data. This is done by sending a response that sets session tokens. Then, Sequence sends multiple requests and compare the randomness of the different responses.
+
+\subsubsection{Sequence Use Example}
+
+In DWVA, go to the tab \texttt{Weak Session IDs}, and click on the button \texttt{Generate}. If you go back to the \texttt{Proxy} tab in BurpSuite, you will see that the responses to clicking that button generates a cookie called \texttt{dwvaSession} that has a sequential integer.
+
+Right-click on the \texttt{Response} section and select \texttt{Send to Sequencer}. The \texttt{Sequencer} tab will change color.
+
+Check the configuration for sequencer and notice that in the seciton \texttt{Token Location Within Response}, the field \texttt{Cookie} is set to \texttt{dwvaSession=}. Then click on the button \texttt{Start live capture}.
+
+After the live capture is done, click on the button \texttt{Analyze now}. You will see a an empty graph. This empty graph means that the cookie value has no entropy and it is predictable.
+
+Now, go back to DVWA, click on the \texttt{Logout} button, clear the browser's stored cookies, and refresh the page. Go back to BurpSuite and, in the \texttt{Proxy} tab send the latest response to sequencer.
+
+In the \texttt{Sequencer} tab, you will see that the new response is selected and the settings have been pre-populated. Click on \texttt{Start live capture}.
+
+Once the capture is completed, click on the button\texttt{Analyze now} and see how the results are different than the previous ones.
+
+\subsection{Intruder}
+
+Intruder is a tool that allows us to send multiple modified requests. These modifications are based on rules set by the analyst.
+
+Intruder has different types of attacks\cite{burpintruder}:
+
+\begin{itemize}
+    \item Sniper: one single set of payloads. In this attack each position take turn in using the payloads. This is used for fuzzing attacks.
+    \item Bettering ram: one single set of payloads. In this attack all the positions iterate through the payload list at the same time. This is used when one payloads is needed in multiple places in the request.
+    \item Pitchfork: multiple payload sets. In this attack each position has a payload list and Burp iterates through the payloads in parallel.
+    \item Cluster bomb: multiple payload sets. In this attack each position has a different payload and Intruder iterates through all positions and through all the payloads. This attack can be use to guess username/password combinations. 
+\end{itemize}
+
+BurpSuite Community Edition does not include the full version of Intruder, as it lacks payload lists and as it is throttled.
+
+In order to overcome the lack of payload lists, we can use SecLists\cite{seclists} or PayloadsAllTheThings\cite{playloadsallthethings}.
+
+
+\subsubsection{Intruder Use Example}
+
+Go back to DWVA, login, and click on the tab \texttt{SQL Injection}. If you type a number \texttt{1} in the field \texttt{User ID} and click on the button \texttt{Submitt}, you will get the information of user 1. You can repeat the same for user 2, user 3, and so on. This is a slow way to enumerate all the users in the system.
+
+Go back to the \texttt{Proxy} tab and select the last request. Right-click on it and select \texttt{Send to Intruder}. The \texttt{Intruder} tab will change color.
+
+Click on the \texttt{Intruder} tab, select the tab \texttt{Positions}, and click on the button that says \texttt{Clear \S}. Then, in the request-line, select the integer number next to the parameter \texttt{id}, and finally click on the button that says \texttt{Add \S}.
+
+Move to the tab that says \texttt{Payloads}. Change the \texttt{Payload type} to \texttt{Numbers}. Then, in \texttt{Payload Options [Numbers]}, set the following options:
+
+\begin{itemize}
+    \item Type: sequential
+    \item From: 0
+    \item To: 20
+    \item Step: 1
+\end{itemize}
+
+Finally, click on the button \texttt{Start Attack} at the top right of the screen.
+
+After the attack is completed, sort the results by length and start analyzing the results. You will notice that the results that are 4770 Bytes correspond to IDs that do not exist.
+
+\subsection{Extender}
+
+Extender is a tool that allows to install external extensions to Burp. Some of these extensions are used to handle information, such as analyzing JSON Web Tokens (JWT); or to add specific attacks to BurpSuite, such as JSON Web Token Attacker.
+
+Some of the extensions are only available to BurpSuite Professional.
+
+Users can develop extensions for BurpSuite in Java and Python.
+
+Before using an extension developed in Python, Jython\cite{jython} must be downloaded in the system running BurpSuite and then enabled in BurpSuite. Jython is a Java implementation of Python.
+
+\begin{thebibliography}{9}
+
+\bibitem{burpsuite}
+    \texttt{\url{https://portswigger.net/burp/documentation/desktop/getting-started/installing-burp}}
+\bibitem{docker}
+    \texttt{\url{https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04}}
+\bibitem{dvwa}
+    \texttt{\url{https://github.com/digininja/DVWA#docker-container}}
+\bibitem{rfc2616}
+    \texttt{\url{https://datatracker.ietf.org/doc/html/rfc2616}}
+\bibitem{burpintruder}
+    \texttt{\url{https://portswigger.net/burp/documentation/desktop/tools/intruder/positions}}
+\bibitem{seclists}
+    \texttt{\url{https://github.com/danielmiessler/SecLists}}
+\bibitem{playloadsallthethings}
+    \texttt{\url{https://github.com/swisskyrepo/PayloadsAllTheThings}}
+\bibitem{jython}
+    \texttt{\url{https://www.jython.org/}}
+
+\end{thebibliography}
+
+\end{document}
